@@ -1,23 +1,27 @@
 // lib/youtube-api.ts
-export async function getYouTubeVideoDetails(videoId: string) {
-  // Ambil dari environment variable
+export async function getYouTubeVideoDetails(videoId: string): Promise<{
+  title: string;
+  description?: string;
+  thumbnail?: string;
+  channel?: string;
+  publishedAt?: string;
+  success: boolean;
+} | null> {
   const apiKey = process.env.YOUTUBE_API_KEY;
-  
-  // 🔍 Guard clause: validasi sebelum request
-  if (!apiKey || apiKey.startsWith('your_api_key_here') || apiKey === 'undefined') {
+
+  if (!apiKey || apiKey.startsWith('your_api_key_here')) {
     console.warn('[YouTube API] API key tidak dikonfigurasi. Menggunakan fallback manual.');
-    return null; // Return null agar route.ts bisa trigger fallback thumbnail
+    return null;
   }
 
   const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`;
   
   try {
-    const res = await fetch(url, { next: { revalidate: 86400 } }); // Cache 24 jam
+    const res = await fetch(url, { next: { revalidate: 86400 } });
     if (!res.ok) throw new Error(`YouTube API ${res.status}`);
     
     const data = await res.json();
     const snippet = data.items?.[0]?.snippet;
-    
     if (!snippet) return null;
     
     return {
